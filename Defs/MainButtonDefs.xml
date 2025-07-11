@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <MainButtonDef>
+    <defName>WhatsWrong_NeedsTracker</defName>
+    <label>Needs</label>
+    <description>Track colonist needs and jump to colonists with problems</description>
+    <tabWindowClass>WhatsWrong.MainTabWindow_NeedsTracker</tabWindowClass>
+    <order>50</order>
+    <defaultHotKey>N</defaultHotKey>
+    <minimized>true</minimized>
+    <iconPath>UI/Buttons/MainButtons/Research</iconPath>
+  </MainButtonDef>
+
+</Defs>
