@@ -53,12 +53,15 @@ namespace WhatsWrong
                     Rect hintRect = new Rect(rect.x, hintY, rect.width, hintHeight);
                     Color hintColor = hint.HasDesignator ? new Color(0.8f, 0.95f, 1f, 0.7f) : new Color(1f, 1f, 0.8f, 0.7f);
                     Widgets.DrawBoxSolid(hintRect, hintColor);
+                    Color prevColor = GUI.color;
+                    GUI.color = Color.black;
                     if (hint.HasDesignator && Widgets.ButtonInvisible(hintRect))
                     {
                         hint.OnClick?.Invoke();
                     }
                     Text.Anchor = TextAnchor.MiddleLeft;
                     Widgets.Label(hintRect, hint.Text);
+                    GUI.color = prevColor;
                     Text.Anchor = TextAnchor.UpperLeft;
                     hintY += hintHeight + 2f;
                 }

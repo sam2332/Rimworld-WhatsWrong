@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
-
 namespace WhatsWrong
 {
     // Represents a tutorial hint for the UI
@@ -17,15 +16,17 @@ namespace WhatsWrong
     // Utility class for scanning gameplay elements and generating hints
     public static class TutorialHintsUtility
     {
-        // Checks if any beds are placed on the map
-        public static bool IsBedPlaced(Map map)
+        // Checks if there are enough beds for all colonists
+        public static bool AreEnoughBedsPlaced(Map map)
         {
+            int bedCount = 0;
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
                 if (building is Building_Bed)
-                    return true;
+                    bedCount++;
             }
-            return false;
+            int colonistCount = map.mapPawns.FreeColonists.Count;
+            return bedCount >= colonistCount && colonistCount > 0;
         }
 
         // Checks if any ideology is selected/active
@@ -75,24 +76,153 @@ namespace WhatsWrong
             return false;
         }
 
-        // Checks for fishing spots/buildings
-        public static bool IsFishingSpotPlaced(Map map)
+        // Checks for fishing zones
+        public static bool IsFishingZonePresent(Map map)
         {
-            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            foreach (Zone zone in map.zoneManager.AllZones)
             {
-                if (building.def.defName == "FishingSpot")
+                if (zone is RimWorld.Zone_Fishing)
                     return true;
             }
             return false;
         }
+        // Checks for stockpile zones (by label)
+        public static bool IsStockpileZonePresent(Map map)
+        {
+            foreach (Zone zone in map.zoneManager.AllZones)
+            {
+                if (zone is RimWorld.Zone_Stockpile stockpileZone &&
+                    stockpileZone.label == RimWorld.StorageSettingsPreset.DefaultStockpile.PresetName())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        // Checks for dumping stockpile zones (by label)
+        public static bool IsDumpingStockpileZonePresent(Map map)
+        {
+            foreach (Zone zone in map.zoneManager.AllZones)
+            {
+                if (zone is RimWorld.Zone_Stockpile stockpileZone &&
+                    stockpileZone.label == RimWorld.StorageSettingsPreset.DumpingStockpile.PresetName())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Checks if there is any food in storage
+        public static bool IsFoodInStorage(Map map)
+        {
+            // Check all storage facilities including stockpiles and shelves
+            IEnumerable<SlotGroup> allGroups = map.haulDestinationManager.AllGroups;
+            
+            foreach (SlotGroup slotGroup in allGroups)
+            {
+                foreach (Thing thing in slotGroup.HeldThings)
+                {
+                    // Check if the item is food
+                    if (thing.def.IsNutritionGivingIngestible && thing.def.ingestible.HumanEdible)
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        // Checks if there are cooking facilities (stove, campfire, etc.)
+        public static bool IsCookingFacilityPresent(Map map)
+        {
+            List<string> cookingFacilities = new List<string>
+            {
+                "Stove",
+                "Campfire",
+                "ElectricStove",
+                "ButcherTable" // Butcher tables can also be used for cooking
+            };
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (cookingFacilities.Contains(building.def.defName))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Checks if there is a table and chair for eating
+        public static bool IsTableAndChairPresent(Map map){
+            List<string> tables = new List<string>
+            {
+                "Table",
+                "DiningTable",
+                "LongTable"
+            };
+            List<string> chairs = new List<string>
+            {
+                "Chair",
+                "Armchair",
+                "Stool"
+            };
+            bool hasTable = false;
+            bool hasChair = false;
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (tables.Contains(building.def.defName))
+                {
+                    hasTable = true;
+                }
+                if (chairs.Contains(building.def.defName))
+                {
+                    hasChair = true;
+                }
+                if (hasTable && hasChair)
+                {
+                    return true; // Both table and chair found
+                }
+            }
+            return false;
+        }
+        // Checks if there are any recreation sources (horseshoe pin, chess table, etc.)
+        public static bool IsRecreationSourcePresent(Map map)
+        {
+            List<string> recreationSources = new List<string>
+            {
+                "HorseshoePin",
+                "ChessTable",
+                "Jukebox",
+                "BilliardsTable"
+            };
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (recreationSources.Contains(building.def.defName))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         // Returns a list of missing hints for the current map (with UI and designator info)
         public static List<TutorialHint> GetMissingHints(Map map)
         {
             var hints = new List<TutorialHint>();
-            if (!IsBedPlaced(map))
+            if (!AreEnoughBedsPlaced(map))
             {
-                hints.Add(CreateHint("No beds placed.", "Bed"));
+                int colonistCount = map.mapPawns.FreeColonists.Count;
+                int bedCount = 0;
+                foreach (Building building in map.listerBuildings.allBuildingsColonist)
+                {
+                    if (building is Building_Bed)
+                        bedCount++;
+                }
+                string bedHintText = colonistCount > 0
+                    ? $"Not enough beds for colonists. ({bedCount}/{colonistCount})"
+                    : "No colonists present!";
+                hints.Add(CreateHint(bedHintText, "Bed"));
             }
             if (!IsIdeologySelected())
             {
@@ -110,9 +240,37 @@ namespace WhatsWrong
             {
                 hints.Add(CreateHint("No growing zones found.", null, true));
             }
-            if (!IsFishingSpotPlaced(map))
+            if (!IsFishingZonePresent(map))
             {
                 hints.Add(CreateHint("No fishing spots placed.", "FishingSpot"));
+            }
+            if (!IsStockpileZonePresent(map))
+            {
+                hints.Add(CreateStockpileZoneHint("No stockpile zone found.", RimWorld.StorageSettingsPreset.DefaultStockpile));
+            }
+            if (!IsDumpingStockpileZonePresent(map))
+            {
+                hints.Add(CreateStockpileZoneHint("No dumping stockpile zone found.", RimWorld.StorageSettingsPreset.DumpingStockpile));
+            }
+            if (!IsFoodInStorage(map))
+            {
+                hints.Add(CreateHint("No food in storage. Your colonists may starve soon.", null));
+            }
+             //Cooking Facility Detector
+            if (!IsCookingFacilityPresent(map))
+            {
+                hints.Add(CreateHint("No cooking facilities found. Colonists need a stove or campfire to cook meals.", "Stove"));
+            }
+            // Table and Chair Detector
+            if (!IsTableAndChairPresent(map))
+            {
+                hints.Add(CreateHint("No table and chair found. Colonists need a place to eat.", "Table"));
+            }
+
+            //Recreation Source Detector
+            if (!IsRecreationSourcePresent(map))
+            {
+                hints.Add(CreateHint("No recreation sources found. Colonists need a place to relax.", "HorseshoePin"));
             }
             return hints;
         }
@@ -146,6 +304,28 @@ namespace WhatsWrong
                     Find.DesignatorManager.Select(zoneDesignator);
                 };
             }
+            return hint;
+        }
+        // Helper to create a TutorialHint for stockpile/dumping stockpile zones
+        private static TutorialHint CreateStockpileZoneHint(string text, RimWorld.StorageSettingsPreset preset)
+        {
+            var hint = new TutorialHint { Text = text, HasDesignator = true };
+            hint.OnClick = () =>
+            {
+                RimWorld.Designator_ZoneAddStockpile designator = null;
+                if (preset == RimWorld.StorageSettingsPreset.DefaultStockpile)
+                {
+                    designator = new RimWorld.Designator_ZoneAddStockpile_Resources();
+                }
+                else if (preset == RimWorld.StorageSettingsPreset.DumpingStockpile)
+                {
+                    designator = new RimWorld.Designator_ZoneAddStockpile_Dumping();
+                }
+                if (designator != null)
+                {
+                    Find.DesignatorManager.Select(designator);
+                }
+            };
             return hint;
         }
 
