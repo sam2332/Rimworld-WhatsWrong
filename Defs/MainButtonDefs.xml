@@ -9,7 +9,6 @@
     <order>50</order>
     <defaultHotKey>N</defaultHotKey>
     <minimized>true</minimized>
-    <iconPath>UI/Buttons/MainButtons/Research</iconPath>
   </MainButtonDef>
 
 </Defs>
