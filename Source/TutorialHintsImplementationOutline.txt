@@ -1,0 +1,42 @@
+// Tutorial Hints System Implementation Checklist
+// (Keep this updated as work progresses)
+//
+// [x] 1. Create TutorialHintsUtility class (see Source/TutorialHintsUtility.cs)
+// [x] 2. Implement detection methods for: Beds, Ideology, Biotech, Butcher Table, Growing Zones, Fishing Spot
+// [x] 3. Implement method to return missing hints (with UI and designator info)
+// [x] 4. Update MainTabWindow_NeedsTracker to display tutorial hints
+// [x] 5. Make hints clickable to activate designator tools
+// [x] 6. Document detection and activation logic in code comments
+// [x] 7. Allow easy extension for new hint types
+// [x] 8. Keep this checklist and outline up to date
+
+// --- CODE OUTLINE ---
+
+// Source/TutorialHintsUtility.cs
+// - static class TutorialHintsUtility
+//   - bool IsBedPlaced(Map map)
+//   - bool IsIdeologySelected()
+//   - bool IsBiotechPresent(Map map)
+//   - bool IsButcherTablePlaced(Map map)
+//   - bool IsGrowingZonePresent(Map map)
+//   - bool IsFishingSpotPlaced(Map map)
+//   - List<TutorialHint> GetMissingHints(Map map)
+//   - TutorialHint: struct/class with text, designator info, click action
+
+// Source/MainTabWindow_NeedsTracker.cs
+// - Update to call TutorialHintsUtility.GetMissingHints
+// - Display hints at top of tab
+// - Make hints clickable (activate designator if available)
+// - Keep UI clean and concise
+
+// Documentation
+// - Reference decompiled game files for all detection and activation logic
+//   - Bed detection: Map.listerBuildings.allBuildingsColonist, Building_Bed
+//   - Ideology detection: Find.FactionManager.OfPlayer.ideos, PrimaryIdeo
+//   - Biotech detection: ModsConfig.BiotechActive, Building.def.defName, Pawn.genes
+//   - Butcher table detection: Building.def.defName == "ButcheryTable"/"ButcherySpot"
+//   - Growing zone detection: Map.zoneManager.AllZones, Zone_Growing
+//   - Fishing spot detection: Building.def.defName == "FishingSpot"
+//   - Designator activation: BuildCopyCommandUtility.FindAllowedDesignator, Find.DesignatorManager.Select
+// - Document class names, method signatures, and game patterns used
+// - Keep this file up to date as implementation progresses

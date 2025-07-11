@@ -51,6 +51,8 @@
     <Compile Include="MainTabWindow_NeedsTracker.cs" />
     <Compile Include="NeedInfo.cs" />
     <Compile Include="ColonistNeedsUtility.cs" />
+    <Compile Include="TutorialHintsUtility.cs" />
+    <Compile Include="TutorialHintsImplementationOutline.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -3,6 +3,7 @@ using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using WhatsWrong;
 
 namespace WhatsWrong
 {
@@ -39,6 +40,30 @@ namespace WhatsWrong
             }
 
             Rect rect = inRect.ContractedBy(10f);
+            // --- Tutorial Hints Section ---
+            Map map = Find.CurrentMap;
+            var hints = TutorialHintsUtility.GetMissingHints(map);
+            if (hints != null && hints.Count > 0)
+            {
+                float hintY = rect.y;
+                float hintHeight = 24f;
+                for (int i = 0; i < hints.Count; i++)
+                {
+                    var hint = hints[i];
+                    Rect hintRect = new Rect(rect.x, hintY, rect.width, hintHeight);
+                    Color hintColor = hint.HasDesignator ? new Color(0.8f, 0.95f, 1f, 0.7f) : new Color(1f, 1f, 0.8f, 0.7f);
+                    Widgets.DrawBoxSolid(hintRect, hintColor);
+                    if (hint.HasDesignator && Widgets.ButtonInvisible(hintRect))
+                    {
+                        hint.OnClick?.Invoke();
+                    }
+                    Text.Anchor = TextAnchor.MiddleLeft;
+                    Widgets.Label(hintRect, hint.Text);
+                    Text.Anchor = TextAnchor.UpperLeft;
+                    hintY += hintHeight + 2f;
+                }
+                rect.yMin += (hintHeight + 2f) * hints.Count + 6f;
+            }
             
             // Title
             Rect titleRect = new Rect(rect.x, rect.y, rect.width, 50f);
