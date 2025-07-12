@@ -59,7 +59,8 @@ namespace WhatsWrong
         {
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
-                if (building.def.defName == "ButcherySpot" || building.def.defName == "ButcheryTable")
+                // Match any building whose defName contains 'butcher' (case-insensitive)
+                if (!string.IsNullOrEmpty(building.def.defName) && building.def.defName.ToLower().Contains("butcher"))
                     return true;
             }
             return false;
@@ -91,10 +92,47 @@ namespace WhatsWrong
         {
             foreach (Zone zone in map.zoneManager.AllZones)
             {
-                if (zone is RimWorld.Zone_Stockpile stockpileZone &&
-                    stockpileZone.label == RimWorld.StorageSettingsPreset.DefaultStockpile.PresetName())
+                if (zone is RimWorld.Zone_Stockpile stockpileZone)
                 {
-                    return true;
+                    var settings = stockpileZone.settings;
+                    if (settings != null)
+                    {
+                        var filter = settings.filter;
+                        if (filter != null)
+                        {
+                            bool allowsCorpse = false;
+                            bool allowsChunk = false;
+                            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+                            {
+                                if (def.defName != null && def.defName.StartsWith("Corpse_"))
+                                {
+                                    if (filter.Allows(def))
+                                    {
+                                        allowsCorpse = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!allowsCorpse)
+                            {
+                                foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+                                {
+                                    if (def.thingCategories != null && def.thingCategories.Contains(RimWorld.ThingCategoryDefOf.Chunks))
+                                    {
+                                        if (filter.Allows(def))
+                                        {
+                                            allowsChunk = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!allowsCorpse && !allowsChunk)
+                            {
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
             return false;
@@ -105,10 +143,36 @@ namespace WhatsWrong
         {
             foreach (Zone zone in map.zoneManager.AllZones)
             {
-                if (zone is RimWorld.Zone_Stockpile stockpileZone &&
-                    stockpileZone.label == RimWorld.StorageSettingsPreset.DumpingStockpile.PresetName())
+                if (zone is RimWorld.Zone_Stockpile stockpileZone)
                 {
-                    return true;
+                    var settings = stockpileZone.settings;
+                    if (settings != null)
+                    {
+                        var filter = settings.filter;
+                        if (filter != null)
+                        {
+                            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+                            {
+                                if (def.defName != null && def.defName.StartsWith("Corpse_"))
+                                {
+                                    if (filter.Allows(def))
+                                    {
+                                        return true;
+                                    }
+                                }
+                            }
+                            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+                            {
+                                if (def.thingCategories != null && def.thingCategories.Contains(RimWorld.ThingCategoryDefOf.Chunks))
+                                {
+                                    if (filter.Allows(def))
+                                    {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             return false;
@@ -137,18 +201,16 @@ namespace WhatsWrong
         // Checks if there are cooking facilities (stove, campfire, etc.)
         public static bool IsCookingFacilityPresent(Map map)
         {
-            List<string> cookingFacilities = new List<string>
-            {
-                "Stove",
-                "Campfire",
-                "ElectricStove",
-                "ButcherTable" // Butcher tables can also be used for cooking
-            };
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
-                if (cookingFacilities.Contains(building.def.defName))
+                // Allow modded and vanilla work tables for cooking by defName
+                if (building is Building_WorkTable)
                 {
-                    return true;
+                    string defName = building.def.defName.ToLower();
+                    if (defName.Contains("stove") || defName.Contains("campfire") || defName.Contains("butcher") || defName.Contains("cook"))
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -156,27 +218,17 @@ namespace WhatsWrong
 
         // Checks if there is a table and chair for eating
         public static bool IsTableAndChairPresent(Map map){
-            List<string> tables = new List<string>
-            {
-                "Table",
-                "DiningTable",
-                "LongTable"
-            };
-            List<string> chairs = new List<string>
-            {
-                "Chair",
-                "Armchair",
-                "Stool"
-            };
             bool hasTable = false;
             bool hasChair = false;
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
-                if (tables.Contains(building.def.defName))
+                // Table detection: surfaceType == SurfaceType.Eat and HasComp(typeof(RimWorld.CompGatherSpot))
+                if (building.def.surfaceType == Verse.SurfaceType.Eat && building.def.HasComp(typeof(RimWorld.CompGatherSpot)))
                 {
                     hasTable = true;
                 }
-                if (chairs.Contains(building.def.defName))
+                // Chair detection: building.isSittable
+                if (building.def.building != null && building.def.building.isSittable)
                 {
                     hasChair = true;
                 }
@@ -190,16 +242,10 @@ namespace WhatsWrong
         // Checks if there are any recreation sources (horseshoe pin, chess table, etc.)
         public static bool IsRecreationSourcePresent(Map map)
         {
-            List<string> recreationSources = new List<string>
-            {
-                "HorseshoePin",
-                "ChessTable",
-                "Jukebox",
-                "BilliardsTable"
-            };
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
-                if (recreationSources.Contains(building.def.defName))
+                // If the building provides a joyKind, it's a recreation source (mod-compatible)
+                if (building.def.building != null && building.def.building.joyKind != null)
                 {
                     return true;
                 }
@@ -234,15 +280,17 @@ namespace WhatsWrong
             }
             if (!IsButcherTablePlaced(map))
             {
-                hints.Add(CreateHint("No butcher table available.", "ButcheryTable"));
+                hints.Add(CreateHint("No butcher table available.", "TableButcher"));
             }
             if (!IsGrowingZonePresent(map))
             {
                 hints.Add(CreateHint("No growing zones found.", null, true));
             }
-            if (!IsFishingZonePresent(map))
+            // Only show fishing hint if Vanilla Fishing Expanded is loaded (designator type exists)
+            var fishingDesignatorType = Type.GetType("RimWorld.Designator_ZoneAdd_Fishing, Assembly-CSharp");
+            if (fishingDesignatorType != null && !IsFishingZonePresent(map))
             {
-                hints.Add(CreateHint("No fishing spots placed.", "FishingSpot"));
+                hints.Add(CreateHint("No fishing spots placed.", null));
             }
             if (!IsStockpileZonePresent(map))
             {
@@ -259,18 +307,18 @@ namespace WhatsWrong
              //Cooking Facility Detector
             if (!IsCookingFacilityPresent(map))
             {
-                hints.Add(CreateHint("No cooking facilities found. Colonists need a stove or campfire to cook meals.", "Stove"));
+                hints.Add(CreateHint("No cooking facilities found. Colonists need a stove or campfire to cook meals.", "FueledStove"));
             }
             // Table and Chair Detector
             if (!IsTableAndChairPresent(map))
             {
-                hints.Add(CreateHint("No table and chair found. Colonists need a place to eat.", "Table"));
+                hints.Add(CreateHint("No table and chair found. Colonists need a place to eat.", "Table2x2c"));
             }
 
             //Recreation Source Detector
             if (!IsRecreationSourcePresent(map))
             {
-                hints.Add(CreateHint("No recreation sources found. Colonists need a place to relax.", "HorseshoePin"));
+                hints.Add(CreateHint("No recreation sources found. Colonists need a place to relax.", "HorseshoesPin"));
             }
             return hints;
         }
@@ -281,14 +329,19 @@ namespace WhatsWrong
             var hint = new TutorialHint { Text = text };
             if (!string.IsNullOrEmpty(defName))
             {
-                hint.DesignatorDef = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+                hint.DesignatorDef = DefDatabase<ThingDef>.GetNamed(defName);
                 hint.HasDesignator = hint.DesignatorDef != null;
                 if (hint.HasDesignator)
                 {
                     hint.OnClick = () =>
                     {
-                        var designator = BuildCopyCommandUtility.FindAllowedDesignator(hint.DesignatorDef);
-                        if (designator != null)
+                        Designator designator = BuildCopyCommandUtility.FindAllowedDesignator(hint.DesignatorDef, true);
+                        if (designator == null)
+                        {
+                            // Try to find in dropdowns if not found directly
+                            designator = BuildCopyCommandUtility.FindAllowedDesignatorRoot(hint.DesignatorDef, true);
+                        }
+                        if (designator != null && designator.Visible)
                         {
                             Find.DesignatorManager.Select(designator);
                         }
@@ -303,6 +356,103 @@ namespace WhatsWrong
                     var zoneDesignator = new Designator_ZoneAdd_Growing();
                     Find.DesignatorManager.Select(zoneDesignator);
                 };
+            }
+            else
+            {
+                hint.HasDesignator = true;
+                string lowerText = text.ToLower();
+                // Assign correct designators or UI actions for each hint type
+                if (lowerText.Contains("ideology"))
+                {
+                    hint.OnClick = () =>
+                    {
+                        Messages.Message("Open the Ideology tab to select an ideology.", MessageTypeDefOf.NeutralEvent, false);
+                    };
+                }
+                else if (lowerText.Contains("biotech") || lowerText.Contains("gene"))
+                {
+                    hint.OnClick = () =>
+                    {
+                        var designator = BuildCopyCommandUtility.FindAllowedDesignator(DefDatabase<ThingDef>.GetNamed("GeneAssembler"));
+                        if (designator != null)
+                        {
+                            Find.DesignatorManager.Select(designator);
+                        }
+                        else
+                        {
+                            Messages.Message("No gene assembler designator found.", MessageTypeDefOf.NeutralEvent, false);
+                        }
+                    };
+                }
+                else if (lowerText.Contains("food") || lowerText.Contains("starve"))
+                {
+                    hint.OnClick = () =>
+                    {
+                        var zoneDesignator = new Designator_ZoneAdd_Growing();
+                        Find.DesignatorManager.Select(zoneDesignator);
+                    };
+                }
+                else if (lowerText.Contains("butcher") || lowerText.Contains("meat"))
+                {
+                    var butcherDef = DefDatabase<ThingDef>.GetNamed("TableButcher");
+                    if (butcherDef != null)
+                    {
+                        var designator = BuildCopyCommandUtility.FindAllowedDesignator(butcherDef);
+                        if (designator != null)
+                        {
+                            Find.DesignatorManager.Select(designator);
+                        }
+                        else
+                        {
+                            Messages.Message("No butchery designator found.", MessageTypeDefOf.NeutralEvent, false);
+                        }
+                    }
+                }
+                else if (lowerText.Contains("fishing"))
+                {
+                    var fishingDesignatorType = Type.GetType("RimWorld.Designator_ZoneAdd_Fishing, Assembly-CSharp");
+                    if (fishingDesignatorType != null)
+                    {
+                        hint.OnClick = () =>
+                        {
+                            var zoneDesignator = Activator.CreateInstance(fishingDesignatorType) as Designator;
+                            if (zoneDesignator != null)
+                            {
+                                Find.DesignatorManager.Select(zoneDesignator);
+                            }
+                        };
+                    }
+                    else
+                    {
+                        hint.OnClick = () =>
+                        {
+                            Messages.Message("Fishing zone designator not found. Is Vanilla Fishing Expanded loaded?", MessageTypeDefOf.NeutralEvent, false);
+                        };
+                    }
+                }
+                else if (lowerText.Contains("recreation") || lowerText.Contains("relax"))
+                {
+                    hint.OnClick = () =>
+                    {
+                        var horseshoePinDef = DefDatabase<ThingDef>.GetNamed("HorseshoesPin");
+                        if (horseshoePinDef != null)
+                        {
+                            var designator = new Designator_Build(horseshoePinDef);
+                            Find.DesignatorManager.Select(designator);
+                        }
+                        else
+                        {
+                            Messages.Message("No recreation designator found.", MessageTypeDefOf.NeutralEvent, false);
+                        }
+                    };
+                }
+                else
+                {
+                    hint.OnClick = () =>
+                    {
+                        Messages.Message(string.Format("Hint: {0}", text), MessageTypeDefOf.NeutralEvent, false);
+                    };
+                }
             }
             return hint;
         }
