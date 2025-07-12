@@ -1,8 +1,32 @@
 <ModMetaData>
   <name>[PL] What's Wrong - Colonist Needs Tracker</name>
   <author>Assistant</author>
-  <description>Track all your colonists' unmet needs in one convenient interface! This mod adds a tab at the bottom of the screen that opens a window showing all colonists with unmet needs. Click on any need to jump directly to that colonist. Perfect for quickly identifying and addressing colonist problems before they become serious issues.</description>
-  <packageId>whatswrong.needstracker.mod</packageId>
+  <description>
+    What's Wrong - Colonist Needs Tracker is a powerful utility mod for RimWorld 1.6 that helps you keep your colony running smoothly by tracking all unmet needs across your colonists in real time.
+    
+    Features:
+    • Adds a dedicated tab to the main UI, accessible at any time, showing a summary of all colonists with unmet needs (food, rest, recreation, medical, mood, and more).
+    • Instantly see which colonists are missing critical resources, such as beds, tables, chairs, food, recreation sources, and more.
+    • Click any need in the tracker window to jump directly to the affected colonist for fast intervention.
+    • Provides actionable tutorial hints and designator shortcuts to help you resolve common issues (e.g., build a stove, place a table, create a growing zone).
+    • Supports modded content: detects needs and objects from popular expansions and mods, including Royalty, Biotech, and Vanilla Expanded modules.
+    • Smart detection for special zones (growing, fishing, stockpile, dumping) and modded buildings.
+    • Fully compatible with RimWorld 1.6 and future updates.
+    • Lightweight, performance-friendly, and designed for both new and veteran players.
+    
+    Usage:
+    - Open the "What's Wrong" tab at the bottom of the screen to view all unmet needs.
+    - Click on any listed need to jump to the colonist or open the relevant build/designator menu.
+    - Use the provided hints to quickly address issues before they escalate.
+    
+    Compatibility:
+    - Works with all major DLCs and most mods that add new needs or buildings.
+    - No game balance changes; purely a UI and utility enhancement.
+    
+    For feedback, bug reports, or suggestions, please visit the mod's GitHub page or Steam Workshop listing.
+    Github: https://github.com/sam2332/Rimworld-WhatsWrong
+  </description>
+  <packageId>whatswrong.programmerlily.com</packageId>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>
@@ -11,5 +35,5 @@
     <li>Ludeon.RimWorld.Royalty</li>
     <li>VanillaExpanded.VFEFishing</li>
   </loadAfter>
-  <modVersion>1.0.0</modVersion>
+  <modVersion>1.0.1</modVersion>
 </ModMetaData>

@@ -216,28 +216,29 @@ namespace WhatsWrong
             return false;
         }
 
+        public class tableResults
+        {
+            public bool hasTable;
+            public bool hasChair;
+        }
         // Checks if there is a table and chair for eating
-        public static bool IsTableAndChairPresent(Map map){
-            bool hasTable = false;
-            bool hasChair = false;
+        public static tableResults IsTableAndChairPresent(Map map){
+            var results = new tableResults();
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
                 // Table detection: surfaceType == SurfaceType.Eat and HasComp(typeof(RimWorld.CompGatherSpot))
                 if (building.def.surfaceType == Verse.SurfaceType.Eat && building.def.HasComp(typeof(RimWorld.CompGatherSpot)))
                 {
-                    hasTable = true;
+                    results.hasTable = true;
                 }
                 // Chair detection: building.isSittable
                 if (building.def.building != null && building.def.building.isSittable)
                 {
-                    hasChair = true;
+                    results.hasChair = true;
                 }
-                if (hasTable && hasChair)
-                {
-                    return true; // Both table and chair found
-                }
+                
             }
-            return false;
+            return results;
         }
         // Checks if there are any recreation sources (horseshoe pin, chess table, etc.)
         public static bool IsRecreationSourcePresent(Map map)
@@ -310,9 +311,14 @@ namespace WhatsWrong
                 hints.Add(CreateHint("No cooking facilities found. Colonists need a stove or campfire to cook meals.", "FueledStove"));
             }
             // Table and Chair Detector
-            if (!IsTableAndChairPresent(map))
+            var tableAndChair = IsTableAndChairPresent(map);
+            if (!tableAndChair.hasTable)    
             {
-                hints.Add(CreateHint("No table and chair found. Colonists need a place to eat.", "Table2x2c"));
+                hints.Add(CreateHint("No table found. Colonists need a place to eat.", "Table2x2c"));
+            }
+            if (!tableAndChair.hasChair)
+            {
+                hints.Add(CreateHint("No chair found. Colonists need a place to sit while eating.", "DiningChair"));
             }
 
             //Recreation Source Detector
