@@ -207,7 +207,7 @@ namespace WhatsWrong
                 if (building is Building_WorkTable)
                 {
                     string defName = building.def.defName.ToLower();
-                    if (defName.Contains("stove") || defName.Contains("campfire") || defName.Contains("butcher") || defName.Contains("cook"))
+                    if (defName.Contains("stove") || defName.Contains("campfire") || defName.Contains("cook"))
                     {
                         return true;
                     }
