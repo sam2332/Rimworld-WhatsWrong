@@ -1,5 +1,5 @@
 <ModMetaData>
-  <name>[PL] What's Wrong - Colonist Needs Tracker</name>
+  <name>What's Wrong - Colonist Needs Tracker</name>
   <author>ProgrammerLily</author>
   <description>
     What's Wrong - Colonist Needs Tracker is a powerful utility mod for RimWorld 1.6 that helps you keep your colony running smoothly by tracking all unmet needs across your colonists in real time.
@@ -35,5 +35,5 @@
     <li>Ludeon.RimWorld.Royalty</li>
     <li>VanillaExpanded.VFEFishing</li>
   </loadAfter>
-  <modVersion>1.0.1</modVersion>
+  <modVersion>1.0.2</modVersion>
 </ModMetaData>
